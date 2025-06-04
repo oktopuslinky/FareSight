@@ -1,5 +1,12 @@
 # FareSight - About
-Through the use of a trained machine learning model, determine what the best areas are for rideshare drivers to maximize their income.
+FareSight is an innovative application that leverages machine learning to predict high-demand taxi zones in New York City at any given time during the year, giving rideshare drivers a competitive edge to maximize their income. By analyzing historical ride data and its patterns, FareSight identifies the most lucrative zones for drivers at any given time, transforming guesswork into data-driven decisions.
+
+# Tech Stack
+Machine Learning: Python and PyTorch for predictive modeling.
+Backend: FastAPI for high-performance, asynchronous API endpoints.
+Frontend: HTML/CSS/JavaScript served via Python’s HTTP server for lightweight zone visualization.
+Data Processing: Pandas/NumPy for handling and analyzing ride data.
+Environment: Python 3.8+, Uvicorn for ASGI server implementation.
 
 # App Usage Instructions
 STARTUP:
@@ -12,3 +19,6 @@ STARTUP:
 TO CHECK IF REQUESTS ARE WORKING:
     http://127.0.0.1:8000/docs#/default/predict_zones_predict_post
     ^^ insert requests and execute
+
+# Data Source Notes
+The data used for training the neural network was from this dataset: https://www.kaggle.com/datasets/jeffsinsel/nyc-fhvhv-data
