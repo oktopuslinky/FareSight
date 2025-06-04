@@ -9,7 +9,7 @@ Data Processing: Pandas/NumPy for handling and analyzing ride data.
 Environment: Python 3.8+, Uvicorn for ASGI server implementation.
 
 # App Usage Instructions
-STARTUP:\n
+STARTUP:
   Have 2 terminals running simultaneously, and input these commands:
       uvicorn main:app --reload --workers 1
       python -m http.server 8080
