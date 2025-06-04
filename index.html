@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NYC Ride Zone Rankings</title>
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.22.9/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .background-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            background: linear-gradient(45deg, #1e3a8a, #4b0082);
+        }
+        .uber-bg {
+            background: linear-gradient(45deg, #000000, #434343);
+        }
+        .lyft-bg {
+            background: linear-gradient(45deg, #db2777, #7e22ce);
+        }
+        .road {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 60px;
+            background: #333;
+            border-top: 4px solid #555;
+        }
+        .lane-markings {
+            position: absolute;
+            top: 50%;
+            width: 100%;
+            height: 4px;
+            background: repeating-linear-gradient(
+                to right,
+                #fff,
+                #fff 10px,
+                transparent 10px,
+                transparent 20px
+            );
+            transform: translateY(-50%);
+        }
+        .car {
+            position: absolute;
+            font-size: 1.5rem;
+            bottom: 10px;
+        }
+        .car-1 { right: -50px; animation: moveCar 10s linear infinite; }
+        .car-2 { right: -50px; animation: moveCar 8s linear infinite 2s; }
+        .car-3 { right: -50px; animation: moveCar 12s linear infinite 4s; }
+        .car-4 { right: -50px; animation: moveCar 9s linear infinite 6s; }
+        @keyframes moveCar {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(calc(-100vw - 50px)); }
+        }
+    </style>
+</head>
+<body className="min-h-screen flex items-start justify-center py-4 relative overflow-hidden">
+    <div id="root"></div>
+    <script type="text/babel">
+        function RoadBackground({ service }) {
+            const bgClass = service === 'Uber' ? 'uber-bg' : 'lyft-bg';
+            const carColor = service === 'Uber' ? 'text-black' : 'text-pink-500';
+    
+            return (
+                <div className={`background-animation ${bgClass}`}>
+                    <div className="road">
+                        <div className="lane-markings"></div>
+                        <div className={`car car-1 ${carColor}`}>🚗</div>
+                        <div className={`car car-2 ${carColor}`}>🚙</div>
+                        <div className={`car car-3 ${carColor}`}>🚗</div>
+                        <div className={`car car-4 ${carColor}`}>🚙</div>
+                    </div>
+                </div>
+            );
+        }
+    
+        function ZoneRankingApp() {
+            const getCurrentTime = () => {
+                const now = new Date();
+                return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+            };
+    
+            const [selectedTime, setSelectedTime] = React.useState(getCurrentTime());
+            const [service, setService] = React.useState('Uber');
+            const [useCurrentTime, setUseCurrentTime] = React.useState(true);
+            const [month, setMonth] = React.useState(6); // Default to June
+            const [dayOfWeek, setDayOfWeek] = React.useState(2); // Default to Wednesday
+            const [zones, setZones] = React.useState([]);
+            const [loading, setLoading] = React.useState(false);
+            const [error, setError] = React.useState(null);
+    
+            const colorScheme = service === 'Uber' 
+                ? { 
+                    primary: 'bg-black', 
+                    text: 'text-white', 
+                    secondary: 'bg-gray-800', 
+                    accent: 'bg-gray-200', 
+                    textAccent: 'text-gray-800'
+                  }
+                : { 
+                    primary: 'bg-pink-500', 
+                    text: 'text-white', 
+                    secondary: 'bg-purple-600', 
+                    accent: 'bg-pink-100', 
+                    textAccent: 'text-pink-800'
+                  };
+    
+            const fetchZones = async (time, service) => {
+                setLoading(true);
+                setError(null);
+                try {
+                    const response = await fetch('http://127.0.0.1:8000/predict', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            time: time,
+                            service: service,
+                            year: 2022,
+                            month: month,
+                            day_of_week: dayOfWeek
+                        })
+                    });
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch predictions');
+                    }
+                    const data = await response.json();
+                    setZones(data);
+                } catch (err) {
+                    setError(err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+    
+            const handleTimeChange = (e) => {
+                const newTime = e.target.value;
+                setSelectedTime(newTime);
+                setUseCurrentTime(false);
+                fetchZones(newTime, service);
+            };
+    
+            const handleMonthChange = (e) => {
+                setMonth(parseInt(e.target.value));
+                fetchZones(selectedTime, service);
+            };
+    
+            const handleDayOfWeekChange = (e) => {
+                setDayOfWeek(parseInt(e.target.value));
+                fetchZones(selectedTime, service);
+            };
+    
+            const handleUseCurrentTime = () => {
+                const currentTime = getCurrentTime();
+                setSelectedTime(currentTime);
+                setUseCurrentTime(true);
+                fetchZones(currentTime, service);
+            };
+    
+            const toggleService = () => {
+                if (service === 'Lyft') {
+                    setService('Uber');
+                    fetchZones(selectedTime, 'Uber');
+                } else {
+                    alert('Lyft predictions are not yet supported.');
+                }
+            };
+    
+            React.useEffect(() => {
+                fetchZones(selectedTime, service); // Initial fetch
+                let interval;
+                if (useCurrentTime) {
+                    interval = setInterval(() => {
+                        const currentTime = getCurrentTime();
+                        setSelectedTime(currentTime);
+                        fetchZones(currentTime, service);
+                    }, 60000);
+                }
+                return () => clearInterval(interval);
+            }, [useCurrentTime, service, month, dayOfWeek]);
+    
+            return (
+                <>
+                    <RoadBackground service={service} />
+                    <div className="relative w-full max-w-md mx-auto px-4">
+                        <div className="relative bg-white bg-opacity-90 rounded-lg p-4">
+                            <div className="flex justify-between items-center mb-6">
+                                <h1 className="text-2xl font-bold text-gray-800">
+                                    NYC {service} Zones
+                                </h1>
+                                <button
+                                    onClick={toggleService}
+                                    className={`px-3 py-1 rounded-lg ${colorScheme.primary} ${colorScheme.text} text-sm font-semibold`}
+                                >
+                                    {service === 'Uber' ? 'Switch to Lyft' : 'Switch to Uber'}
+                                </button>
+                            </div>
+    
+                            <div className="mb-6">
+                                <label className="block text-gray-700 text-sm font-semibold mb-2">
+                                    Pick a Time
+                                </label>
+                                <div className="flex items-center space-x-2">
+                                    <input
+                                        type="time"
+                                        id="timePicker"
+                                        value={selectedTime}
+                                        onChange={handleTimeChange}
+                                        className={`w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-${service === 'Uber' ? 'gray-800' : 'pink-500'} text-lg bg-white text-gray-800`}
+                                    />
+                                    <button
+                                        onClick={handleUseCurrentTime}
+                                        className={`px-3 py-2 rounded-lg ${useCurrentTime ? colorScheme.primary : colorScheme.accent} ${useCurrentTime ? colorScheme.text : colorScheme.textAccent} text-sm font-semibold`}
+                                    >
+                                        Use Current
+                                    </button>
+                                </div>
+                            </div>
+    
+                            <div className="mb-6">
+                                <label className="block text-gray-700 text-sm font-semibold mb-2">
+                                    Select Month
+                                </label>
+                                <select
+                                    value={month}
+                                    onChange={handleMonthChange}
+                                    className={`w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-${service === 'Uber' ? 'gray-800' : 'pink-500'} text-lg bg-white text-gray-800`}
+                                >
+                                    {[...Array(12).keys()].map(m => (
+                                        <option key={m + 1} value={m + 1}>{m + 1}</option>
+                                    ))}
+                                </select>
+                            </div>
+    
+                            <div className="mb-6">
+                                <label className="block text-gray-700 text-sm font-semibold mb-2">
+                                    Select Day of Week
+                                </label>
+                                <select
+                                    value={dayOfWeek}
+                                    onChange={handleDayOfWeekChange}
+                                    className={`w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-${service === 'Uber' ? 'gray-800' : 'pink-500'} text-lg bg-white text-gray-800`}
+                                >
+                                    <option value={0}>Monday</option>
+                                    <option value={1}>Tuesday</option>
+                                    <option value={2}>Wednesday</option>
+                                    <option value={3}>Thursday</option>
+                                    <option value={4}>Friday</option>
+                                    <option value={5}>Saturday</option>
+                                    <option value={6}>Sunday</option>
+                                </select>
+                            </div>
+    
+                            <div>
+                                <h2 className="text-lg font-semibold text-gray-800 mb-4">
+                                    Top Zones at {selectedTime}
+                                </h2>
+                                {loading && <p>Loading...</p>}
+                                {error && <p className="text-red-500">{error}</p>}
+                                {!loading && !error && (
+                                    <div className="space-y-3">
+                                        {zones.map((zone, index) => (
+                                            <div
+                                                key={zone.zoneId}
+                                                className="bg-white rounded-lg shadow-md p-4 flex items-center"
+                                            >
+                                                <div className={`w-10 h-10 flex items-center justify-center ${colorScheme.secondary} ${colorScheme.text} rounded-full font-bold text-lg mr-4`}>
+                                                    {index + 1}
+                                                </div>
+                                                <div>
+                                                    <p className="text-gray-800 font-semibold">{zone.zoneName}</p>
+                                                    <p className="text-gray-500 text-sm">Zone ID: {zone.zoneId}</p>
+                                                    <p className="text-gray-500 text-sm">Predicted Rides: {zone.predictedRides.toFixed(2)}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </>
+            );
+        }
+    
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<ZoneRankingApp />);
+    </script>
+</body>
+</html>
