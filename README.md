@@ -1,7 +1,7 @@
-# RidesharePrediction
+# FareSight
 Through the use of a trained machine learning model, determine what the best areas are for rideshare drivers to maximize their income.
 
-APP STARTUP INSTRUCTIONS
+# APP STARTUP INSTRUCTIONS
   Have 2 terminals running simultaneously, and input these commands:
       uvicorn main:app --reload --workers 1
       python -m http.server 8080
