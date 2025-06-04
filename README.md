@@ -8,15 +8,14 @@ Frontend: HTML/CSS/JavaScript served via Python’s HTTP server for lightweight 
 Data Processing: Pandas/NumPy for handling and analyzing ride data.
 Environment: Python 3.8+, Uvicorn for ASGI server implementation.
 
-# App Usage Instructions
-STARTUP:
+# App Startup Instructions
   Have 2 terminals running simultaneously, and input these commands:
       uvicorn main:app --reload --workers 1
       python -m http.server 8080
   
   Open http://localhost:8080 in a browser
 
-TO CHECK IF REQUESTS ARE WORKING:
+# To Check if Requests are Working:
     http://127.0.0.1:8000/docs#/default/predict_zones_predict_post
     ^^ insert requests and execute
 
