@@ -11,9 +11,10 @@ FareSight is an innovative application that leverages machine learning to predic
 </ul>
 
 # App Startup Instructions
-  Have 2 terminals running simultaneously, and input these commands:
-    ```uvicorn main:app --reload --workers 1
-    python -m http.server 8080```
+  <p>Have 2 terminals running simultaneously, and input these commands:</p>
+    
+    ```uvicorn main:app --reload --workers 1```
+    ```python -m http.server 8080```
   
   Open http://localhost:8080 in a browser
 
